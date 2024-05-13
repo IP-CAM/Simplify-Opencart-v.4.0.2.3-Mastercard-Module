@@ -20,37 +20,9 @@ Click here to access the documentation: https://mpgs.fingent.wiki/simplify-comme
 For customer support:https://mpgsfgs.atlassian.net/servicedesk/customer/portals
 
 ## Compatibility
-Versions v1.0.0 to v1.0.4
-- Compatible with OpenCart versions up to 1.5.6.4.
 
-Versions v1.0.5
-- Compatible with OpenCart 2.0 (tested with v2.0.1.1).
-
-Version v1.1.0
-- Adds Hosted Payments mode.
-
-Version v1.2.0
-- Compatible with OpenCart 2.3.0.2.
-
-Version v1.2.1
-- Enhancements and compatible with OpenCart 2.3.0.2.
-
-Version v2.0.0
-- Compatibility with OpenCart 3.0.3.1.
-- Removed standard (form) integration.
-
-Version v2.1.0
-- Adds Authorize + Capture transaction modes.
-
-Version v2.2.0
-- Added embedded option on checkout.
-- Changed branding and some terminology.
-
-Version v2.3.0
-- Updated a way of adding necessary Styles and Scripts to the Checkout Page.
-
-Version v2.4.0
-- Rename Integration Model Field and Value Names on the extension Configuration page.
+Version v2.5.1
+- Implemented a notification feature to alert the OpenCart administrator whenever a new version is launched on GitHub.
 
 Version v2.5.0
 - Enhanced Compatibility: Compatible with PHP 8.1 & Opencart 4.0.2.x (tested with v4.0.2.3).

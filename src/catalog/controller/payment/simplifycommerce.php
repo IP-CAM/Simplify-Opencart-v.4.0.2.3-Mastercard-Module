@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2013-2023 Mastercard
+ * Copyright (c) 2013-2021 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
     {
 
 
-        $this->log->write("Index called. Session data: ");
+        $this->log->write("Index called. Session data: " . print_r($this->session->data['order_id'], true));
  
         $data['template'] = $this->config->get('config_theme');
 
@@ -224,6 +224,8 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
 
             $this->session->data['error'] = $mess;
 
+           
+           // die();
 
            return $this->response->redirect($this->url->link('checkout/failure', '', 'SSL')); 
         }
