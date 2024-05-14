@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2013-2023 Mastercard
+ * Copyright (c) 2013-2021 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ use Opencart\Admin\Model\Extension\SimplifyCommerce\Payment;
 use Opencart\System\Library\Mail;
 class SimplifyCommerce extends \Opencart\System\Engine\Controller
 {
+    const MODULE_VERSION = '2.5.1';
     private array $error = [];
     private $separator = '';
 
@@ -34,6 +35,7 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
 
     public function index()
     {
+        // Install must not fail even if executed multiple times
         $this->install();
 
         $this->load->language('extension/SimplifyCommerce/payment/simplifycommerce');
@@ -110,22 +112,29 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         foreach ($err_arr as $val) {
             $data['error_' . $val] = $this->error[$val] ?? '';
         }
+
+
         $data['breadcrumbs'] = [];
+
         $data['breadcrumbs'][] = [
             'text' => $this->language->get('text_home'),
             'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
         ];
+
+
         $data['breadcrumbs'][] = [
             'text' => $this->language->get('text_extension'),
             'href' => $this->url->link('marketplace/extension',
                 'user_token=' . $this->session->data['user_token'] . '&type=payment', true)
         ];
+        
         $data['breadcrumbs'][] = [
             'text' => $this->language->get('heading_title'),
             'href' => $this->url->link('extension/SimplifyCommerce/payment/simplifycommerce',
                 'user_token=' . $this->session->data['user_token'], true)
         ];
         
+
         $data['action'] = $this->url->link('extension/SimplifyCommerce/payment/simplifycommerce',
             'user_token=' . $this->session->data['user_token'], true);
 
@@ -136,6 +145,9 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
 
         $data['payment_simplifycommerce_button_color'] = $this->request->post['payment_simplifycommerce_button_color'] ?? $this->config->get('payment_simplifycommerce_button_color');
 
+        
+
+        // set to light blue if not set
         $data['payment_simplifycommerce_button_color'] = !empty($data['payment_simplifycommerce_button_color']) ? $data['payment_simplifycommerce_button_color'] : "#1f90bb";
 
         $data['payment_simplifycommerce_livesecretkey'] = $this->request->post['payment_simplifycommerce_livesecretkey'] ?? $this->config->get('payment_simplifycommerce_livesecretkey');
@@ -153,6 +165,8 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         $data['payment_simplifycommerce_title'] = $this->request->post['payment_simplifycommerce_title'] ?? $this->config->get('payment_simplifycommerce_title', 'Pay with Card');
 
         $data['payment_simplifycommerce_integration_model'] = $this->request->post['payment_simplifycommerce_integration_model'] ?? $this->config->get('payment_simplifycommerce_integration_model', 'modal');
+
+        
 
         $this->load->model('localisation/order_status');
 
@@ -183,7 +197,11 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
-
+        $data['module_version'] = self::MODULE_VERSION;
+        $latestVersion = $this->getLatestGitHubVersion();
+        $data['latest_version'] =  $latestVersion ;
+        $currentVersion = "";
+        $data['update_message'] = $this->compareVersions($latestVersion, $currentVersion);
         $this->response->setOutput($this->load->view('extension/SimplifyCommerce/payment/simplifycommerce', $data));
     }
 
@@ -214,6 +232,7 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         $this->testRegex('testsecretkey', "/^[a-zA-Z0-9\/=+]{10,}$/");
         $this->testRegex('testpubkey', "/^sbpb_.*$/");
 
+        // If in live mode, check that we have private and pub live keys
         if (!$this->request->post['payment_simplifycommerce_test']) {
             $this->testRegex('livesecretkey', "/^[a-zA-Z0-9\/=+]{10,}$/");
             $this->testRegex('livepubkey', "/^lvpb_.*$/");
@@ -247,6 +266,10 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         $order = $this->model_extension_SimplifyCommerce_payment_simplifycommerce->getOrder(
             $this->request->get['order_id']
         );
+        // echo "<pre>";
+        // print_r($order);
+        // echo "</pre>";
+        // die();
         $currencies = $this->model_localisation_currency->getCurrencies();
         $defaultCurrencyCode = $this->config->get('config_currency');
         $currencyInfo = $this->model_localisation_currency->getCurrencyByCode($defaultCurrencyCode);
@@ -266,6 +289,8 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
                     $this->request->get['order_id']
                 )
             );
+
+           
 
             $data['order_id'] = $this->request->get['order_id'];
             $data['user_token'] = $this->request->get['user_token'];
@@ -305,12 +330,6 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
             return $this->load->view('extension/SimplifyCommerce/payment/simplifycommerce_order', $data);
         }
     }
-
-    /**
-    * This Method allows to capture the authorized payment.
-    *
-    * @version 2.5.0
-    */
 
     public function capture()
     {
@@ -376,6 +395,8 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         
         catch (\Simplify_ApiException $e) {
             $errorMessage = $e->getMessage();
+            // print_r($errorMessage);
+            // die();
             if ($errorMessage == "System error occurred processing a request") {
                 $comment = "Error Occured in capturing transaction";
                 $payment_succes_status = $this->config->get('payment_simplifycommerce_order_status_id');
@@ -420,6 +441,8 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
             $this->response->setOutput(json_encode($json));
             return;
         }
+
+ 
     }
     public function process_capture_order_status ($charge){
 
@@ -476,12 +499,6 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         $this->response->setOutput(json_encode($json));
 
     }
-
-    /**
-    * This Method allows to fully refund the captured payment.
-    *
-    * @version 2.5.0
-    */
 
     public function process_refund()
     {
@@ -637,13 +654,6 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
             return;
         }
     }
-
-    /**
-    * This Method allows to partially refund the captured payment.
-    *
-    * @version 2.5.0
-    */
-
 
     public function process_Partialrefund()
     {
@@ -807,13 +817,6 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
        
     }
 
-    /**
-    * This Method handles the sending custom email alerts.
-    *
-    * @version 2.5.0
-    */
-
-
     private function sendCustomEmail($reciever_address, $customer_name ,  $order_id  , $capture_order_id , $mail_type) {
         $this->load->model('extension/SimplifyCommerce/payment/simplifycommerce');
         $this->load->model('localisation/currency');
@@ -840,6 +843,10 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
                     $order_id
                 )
             );
+            // echo "<pre>";
+            // print_r($data);
+            // echo "</pre>";
+            // die();
             $data['order_id'] = $order_id ;
             $data['user_token'] = $this->request->get['user_token'];
             $data['customer_name']  =$customer_name;
@@ -866,5 +873,44 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
         }
 
     }
+
+    private function getLatestGitHubVersion() {
+        $owner = 'fingent-corp';
+        $repo = 'simplify-opencart-mastercard-module';
+        $url = "https://api.github.com/repos/{$owner}/{$repo}/releases/latest";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mastercard');
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            return null; 
+        }
+        curl_close($ch);
+        $data = json_decode($response, true);
     
+        if (isset($data['tag_name'])) {
+            return $data['tag_name'];
+        } else {
+            return null; 
+        }
+    }
+    
+    private function compareVersions($latestVersion, $currentVersion) {
+        $owner = 'fingent-corp';
+        $repo = 'simplify-opencart-mastercard-module';
+        $downloadLink = "https://github.com/{$owner}/{$repo}/releases/latest";
+        $releaseNotesLink = "https://mpgs.fingent.wiki/simplify-commerce/simplify-commerce-payment-gateway-for-opencart/release-notes/";
+        
+        if ($latestVersion !== null && version_compare($latestVersion, $currentVersion, '>')) {
+            $message = "A new version ({$latestVersion}) of the module is now available! Please refer to the <a href='{$releaseNotesLink}' target='_blank'>Release Notes</a> section for information about its compatibility and features.";
+            return $message;
+        }
+    
+        return null;
+    }
+    
+
+
+
 }

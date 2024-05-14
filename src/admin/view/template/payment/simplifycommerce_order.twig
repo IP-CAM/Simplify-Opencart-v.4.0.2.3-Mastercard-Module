@@ -159,7 +159,7 @@
 		    var message_container = $('#simplify_transaction_msg_' + txn_id);
 		    $(this).next('.img_loading').show();
 
-		    var self = this; 
+		    var self = this; // Store a reference to 'this'
 
 		    $.ajax({
 		        type: 'POST',
@@ -188,14 +188,25 @@
 		                }, 2000);
 		            }
 		        },
-		        error: $.proxy(function (data) {
-					message_container.text(data).show();
-					message_container.text("Error in capturing transaction").show();
-					message_container.addClass('alert alert-danger');
+		        error: $.proxy(function (jqXHR, textStatus, errorThrown) {
+					var status = jqXHR.status;
+					console.log(status);
+					if (status == 401) {
+						message_container.text("Error in capturing transaction").show();
+						message_container.addClass('alert alert-danger');
+						$('.img_loading').hide();
+					} else if (status == 201) {
+						message_container.text("Transaction captured successfully").show();
+						message_container.addClass('alert alert-success');
+						$('.img_loading').hide();
+					}
+					// Add setTimeout to reload the page after 2 seconds
 					setTimeout(function () {
-							location.reload(true); 
+						location.reload(true);
 					}, 2000);
 				}, this),
+
+
 		        complete: function () {
 		            $('.img_loading').hide();
 		        }
@@ -250,17 +261,27 @@
 					}, 2000);
 				}
 			}, this),
-			error: $.proxy(function (data) {
-				message_container.addClass('alert alert-danger');
-				message_container.text("Error In Processing Refund").show();
-				setTimeout(function () {
-						location.reload(true); 
-				}, 2000);
-			}, this),
+			error: $.proxy(function (jqXHR, textStatus, errorThrown) {
+					var status = jqXHR.status;
+					console.log(status);
+					if (status == 401) {
+						message_container.text("Error In Processing Refund").show();
+						message_container.addClass('alert alert-danger');
+						$('.img_loading').hide();
+					} else if (status == 201) {
+						message_container.text("Transaction refunded successfully").show();
+						message_container.addClass('alert alert-success');
+						$('.img_loading').hide();
+					}
+					
+					setTimeout(function () {
+						location.reload(true);
+					}, 2000);
+				}, this),
 		});
 		} else{
 			message_container.addClass('alert alert-danger');
-            message_container.text("Refund Amount Exceeds Limit").show();
+            message_container.text("Enter maximum allowed amount").show();
             return;
 		}	
 
@@ -308,16 +329,28 @@
 					}, 2000);
 				}
 			}, this),
-			error: $.proxy(function (data) {
-				$('#simplify_transaction_msg_' + last_refund_txn).addClass('alert alert-danger');
-				$('#simplify_transaction_msg_' + last_refund_txn).text("Error In Processing Refund").show();
-				setTimeout(function () {
-						location.reload(true); 
-				}, 2000);
-			}, this),
+			error: $.proxy(function (jqXHR, textStatus, errorThrown) {
+					var status = jqXHR.status;
+					console.log(status);
+					if (status == 401) {
+						$('#simplify_transaction_msg_' + last_refund_txn).addClass('alert alert-danger');
+					$('#simplify_transaction_msg_' + last_refund_txn).text("Error In Processing Refund").show();
+						$('.img_loading').hide();
+					} else if (status == 201) {
+						$('#simplify_transaction_msg_' + last_refund_txn).addClass('alert alert-success');
+					$('#simplify_transaction_msg_' + last_refund_txn).text("Refunded Sucessfully").show();
+						$('.img_loading').hide();
+					}
+					
+					setTimeout(function () {
+						location.reload(true);
+					}, 2000);
+				}, this),
 			complete: $.proxy(function () {
 				$('.img_loading').hide();
 			}, this)
 		});
+
+		
 	});
 </script>
