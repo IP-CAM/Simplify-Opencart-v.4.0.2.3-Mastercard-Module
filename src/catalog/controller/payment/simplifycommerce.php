@@ -152,10 +152,12 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
 
     public function charge()
     {
+        
         require_once(DIR_EXTENSION . 'SimplifyCommerce/system/library/simplifycommerce/lib/Simplify.php');
        
         $this->language->load('extension/payment/simplifycommerce');
         $this->load->model('checkout/order');
+        $this->load->model('localisation/country');
 
         if ($this->config->get('payment_simplifycommerce_test') == 1) {
             $secret_key = trim($this->config->get('payment_simplifycommerce_testsecretkey'));
@@ -178,9 +180,43 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
             if (!isset($order_id)) {
                 throw new Exception($this->language->get('message_no_order'));
             }
-       
 
             $order_info = $this->model_checkout_order->getOrder($order_id);
+            if ($order_info) {
+                $country_id = $order_info['shipping_country_id'];
+                $country_info = $this->model_localisation_country->getCountry($country_id);
+                if ($country_info) {
+                    $country_code = $country_info['iso_code_2'];
+                } else {
+                    $country_code = ''; 
+                }
+
+               
+                // Extract shipping address details
+                $shipping_address = array(
+                    'name'           => $order_info['shipping_firstname'] . ' ' . $order_info['shipping_lastname'],
+                    'addressLine1'   => $order_info['shipping_address_1'],
+                    'addressLine2'   => $order_info['shipping_address_2'],
+                    'addressCity'    => $order_info['shipping_city'],
+                    'addressZip'     => $order_info['shipping_postcode'],
+                    'addressCountry' => $order_info['shipping_iso_code_2'],
+                    'addressState'   => $order_info['shipping_zone'],
+                );
+    
+                // Print the shipping address
+                
+            } 
+            $customer = \Simplify_Customer::createCustomer(array(
+                'email' =>$order_info['email'],
+                'name'  => $order_info['firstname'] . ' ' . $order_info['lastname'],
+                'reference' => $this->model_checkout_order->getOrder($order_id),
+            ), $public_key, $secret_key);
+
+             // Check if customer creation was successful
+            if (!$customer->id) {
+                throw new \Simplify_ApiException('Customer creation failed');
+            }
+
             $this->setSimplifyCookie();
             $order_status = $order_info['order_status_id'];
 
@@ -190,6 +226,11 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
                 'description' => 'OpenCart - order id: '.$order_id,
                 'reference'   => $order_id,
                 'currency'    => strtoupper($order_info['currency_code']),
+                'card'         => $shipping_address,
+                'customer'    => $customer->id,
+                'order' => array(
+                    'reference' => $customer->id,
+                 )
             );
             if ($order_info) {
                     $txnMode = $this->config->get('payment_simplifycommerce_txn_mode') ?: 'payment';

@@ -19,7 +19,7 @@ use Opencart\Admin\Model\Extension\SimplifyCommerce\Payment;
 use Opencart\System\Library\Mail;
 class SimplifyCommerce extends \Opencart\System\Engine\Controller
 {
-    const MODULE_VERSION = '2.5.1';
+    const MODULE_VERSION = '2.5.2';
     private array $error = [];
     private $separator = '';
 

@@ -21,6 +21,9 @@ For customer support:https://mpgsfgs.atlassian.net/servicedesk/customer/portals
 
 ## Compatibility
 
+Version v2.5.2
+- Implemented feature to display customer details on gateway portal during transactions.
+
 Version v2.5.1
 - Implemented a notification feature to alert the OpenCart administrator whenever a new version is launched on GitHub.
 
