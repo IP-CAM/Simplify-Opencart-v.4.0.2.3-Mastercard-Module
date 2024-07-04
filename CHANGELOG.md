@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.2] - 2024-06-04
+
+### Added
+- Implemented feature to display customer details on gateway portal during transactions.
+
 ## [2.5.1] - 2024-05-09
 
 ### Added
