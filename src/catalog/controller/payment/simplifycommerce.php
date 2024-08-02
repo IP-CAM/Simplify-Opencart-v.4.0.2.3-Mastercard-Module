@@ -226,7 +226,6 @@ class SimplifyCommerce extends \Opencart\System\Engine\Controller
                 'description' => 'OpenCart - order id: '.$order_id,
                 'reference'   => $order_id,
                 'currency'    => strtoupper($order_info['currency_code']),
-                'card'         => $shipping_address,
                 'customer'    => $customer->id,
                 'order' => array(
                     'reference' => $customer->id,
